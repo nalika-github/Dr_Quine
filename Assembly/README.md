@@ -36,25 +36,25 @@ main:
 
 ### Registers (x86-64)
 
-**General Purpose Registers (64-bit):**
+**General Purpose Registers (รีจิสเตอร์ทั่วไป 64-bit):**
 
 ```
-┌─────────┬──────────────────────────────────┐
-│ 64-bit  │ Purpose                          │
-├─────────┼──────────────────────────────────┤
-│ rax     │ Accumulator, return value        │
-│ rbx     │ Base register                    │
-│ rcx     │ Counter, 4th argument            │
-│ rdx     │ Data register, 3rd argument      │
-│ rsi     │ Source index, 2nd argument       │
-│ rdi     │ Destination index, 1st argument  │
-│ rbp     │ Base pointer (stack frame)       │
-│ rsp     │ Stack pointer                    │
-│ r8-r15  │ Additional general purpose       │
-└─────────┴──────────────────────────────────┘
+┌─────────┬──────────────────────────────────────────┐
+│ 64-bit  │ ความหมาย                                │
+├─────────┼──────────────────────────────────────────┤
+│ rax     │ Accumulator, ค่าที่ return             │
+│ rbx     │ Base register                           │
+│ rcx     │ Counter, argument ตัวที่ 4             │
+│ rdx     │ Data register, argument ตัวที่ 3       │
+│ rsi     │ Source index, argument ตัวที่ 2        │
+│ rdi     │ Destination index, argument ตัวที่ 1   │
+│ rbp     │ Base pointer (stack frame)              │
+│ rsp     │ Stack pointer                           │
+│ r8-r15  │ รีจิสเตอร์ทั่วไปเพิ่มเติม                │
+└─────────┴──────────────────────────────────────────┘
 ```
 
-**Accessing Different Sizes:**
+**การเข้าถึงขนาดที่ต่างกัน:**
 ```
 ┌──────┬──────┬──────┬──────┐
 │  64  │  32  │  16  │   8  │
@@ -68,20 +68,20 @@ main:
 └──────┴──────┴──────┴──────┘
 ```
 
-**Special Registers:**
-- `rip` - Instruction pointer (program counter)
-- `rflags` - Flags register (carry, zero, sign, etc.)
+**รีจิสเตอร์พิเศษ:**
+- `rip` - Instruction pointer (ตัวชี้ตำแหน่งคำสั่ง)
+- `rflags` - Flags register (เก็บ carry, zero, sign ฯลฯ)
 
 ### Instructions พื้นฐาน
 
-#### 1. Data Movement
+#### 1. การย้ายข้อมูล (Data Movement)
 ```asm
-mov rax, 42          ; rax = 42 (immediate value)
-mov rax, rbx         ; rax = rbx (register to register)
-mov rax, [rbx]       ; rax = *rbx (load from memory)
-mov [rbx], rax       ; *rbx = rax (store to memory)
+mov rax, 42          ; rax = 42 (ค่าตายตัว)
+mov rax, rbx         ; rax = rbx (รีจิสเตอร์ไปรีจิสเตอร์)
+mov rax, [rbx]       ; rax = *rbx (โหลดจาก memory)
+mov [rbx], rax       ; *rbx = rax (เก็บไปที่ memory)
 
-lea rax, [rel msg]   ; rax = address of msg (load effective address)
+lea rax, [rel msg]   ; rax = address ของ msg (load effective address)
 ```
 
 **ความแตกต่าง `mov` vs `lea`:**
@@ -91,39 +91,39 @@ mov rax, [rel msg]   ; rax = ค่าที่อยู่ใน msg (ชี้
 lea rax, [rel msg]   ; rax = address ของ msg
 ```
 
-#### 2. Arithmetic
+#### 2. การคำนวณทางคณิตศาสตร์ (Arithmetic)
 ```asm
-add rax, 5           ; rax += 5
-sub rax, 3           ; rax -= 3
-inc rax              ; rax++
-dec rax              ; rax--
-imul rax, rbx        ; rax *= rbx (signed)
-idiv rbx             ; rax = rdx:rax / rbx, rdx = remainder
+add rax, 5           ; rax += 5 (บวก)
+sub rax, 3           ; rax -= 3 (ลบ)
+inc rax              ; rax++ (เพิ่ม 1)
+dec rax              ; rax-- (ลด 1)
+imul rax, rbx        ; rax *= rbx (คูณแบบ signed)
+idiv rbx             ; rax = rdx:rax / rbx, rdx = เศษที่เหลือ
 ```
 
-#### 3. Logical Operations
+#### 3. การดำเนินการทางตรรกะ (Logical Operations)
 ```asm
-and rax, rbx         ; rax &= rbx
-or  rax, rbx         ; rax |= rbx
-xor rax, rax         ; rax ^= rax (zeroing trick: rax = 0)
-not rax              ; rax = ~rax
+and rax, rbx         ; rax &= rbx (AND)
+or  rax, rbx         ; rax |= rbx (OR)
+xor rax, rax         ; rax ^= rax (เทคนิคทำให้เป็น 0: rax = 0)
+not rax              ; rax = ~rax (NOT)
 ```
 
-#### 4. Comparison & Jumps
+#### 4. การเปรียบเทียบและกระโดด (Comparison & Jumps)
 ```asm
-cmp rax, rbx         ; compare rax with rbx (sets flags)
-test rax, rax        ; test if rax is zero
+cmp rax, rbx         ; เปรียบเทียบ rax กับ rbx (ตั้งค่า flags)
+test rax, rax        ; ตรวจสอบว่า rax เป็น 0 หรือไม่
 
-; Conditional jumps (based on flags)
-je  .label           ; jump if equal (ZF=1)
-jne .label           ; jump if not equal (ZF=0)
-jl  .label           ; jump if less (SF≠OF)
-jle .label           ; jump if less or equal
-jg  .label           ; jump if greater
-jge .label           ; jump if greater or equal
+; Conditional jumps (กระโดดตามเงื่อนไข)
+je  .label           ; กระโดดถ้าเท่ากัน (ZF=1)
+jne .label           ; กระโดดถ้าไม่เท่ากัน (ZF=0)
+jl  .label           ; กระโดดถ้าน้อยกว่า (SF≠OF)
+jle .label           ; กระโดดถ้าน้อยกว่าหรือเท่ากัน
+jg  .label           ; กระโดดถ้ามากกว่า
+jge .label           ; กระโดดถ้ามากกว่าหรือเท่ากัน
 
-; Unconditional jump
-jmp .label           ; always jump
+; Unconditional jump (กระโดดไม่มีเงื่อนไข)
+jmp .label           ; กระโดดเสมอ
 ```
 
 **ตัวอย่าง:**
@@ -138,57 +138,57 @@ jmp .done
 .done:
 ```
 
-#### 5. Stack Operations
+#### 5. การจัดการ Stack (Stack Operations)
 ```asm
-push rax             ; rsp -= 8; [rsp] = rax
-pop  rax             ; rax = [rsp]; rsp += 8
+push rax             ; rsp -= 8; [rsp] = rax (เก็บค่าลง stack)
+pop  rax             ; rax = [rsp]; rsp += 8 (ดึงค่าจาก stack)
 ```
 
-**Stack grows downward:**
+**Stack เติบโตไปทางล่าง:**
 ```
-High Address
+ที่อยู่สูง (High Address)
     ↑
     │  push → rsp ลดลง
     │  pop  → rsp เพิ่มขึ้น
     ↓
-Low Address
+ที่อยู่ต่ำ (Low Address)
 ```
 
-### Function Calls (System V ABI)
+### การเรียกใช้ฟังก์ชัน (Function Calls - System V ABI)
 
-**Calling Convention:**
+**Calling Convention (กฏการส่ง arguments):**
 
 ```asm
-; Arguments (in order):
+; Arguments (ตามลำดับ):
 ; rdi, rsi, rdx, rcx, r8, r9, [stack]
 
-; Example: printf(format, arg1, arg2, arg3)
-lea rdi, [rel format]    ; 1st arg: format string
-mov rsi, 10              ; 2nd arg: value 10
-mov rdx, 34              ; 3rd arg: value 34
-lea rcx, [rel mystr]     ; 4th arg: pointer
-xor rax, rax             ; rax = 0 (no vector registers)
-call printf              ; call function
+; ตัวอย่าง: printf(format, arg1, arg2, arg3)
+lea rdi, [rel format]    ; arg ตัวที่ 1: format string
+mov rsi, 10              ; arg ตัวที่ 2: ค่า 10
+mov rdx, 34              ; arg ตัวที่ 3: ค่า 34
+lea rcx, [rel mystr]     ; arg ตัวที่ 4: pointer
+xor rax, rax             ; rax = 0 (ไม่มี vector registers)
+call printf              ; เรียกฟังก์ชัน
 ```
 
-**Function Prologue/Epilogue:**
+**Function Prologue/Epilogue (เปิด/ปิดฟังก์ชัน):**
 
 ```asm
 main:
-    push rbp             ; save old base pointer
-    mov rbp, rsp         ; rbp = current stack pointer
-    sub rsp, 32          ; allocate 32 bytes local space
+    push rbp             ; เก็บ base pointer เดิม
+    mov rbp, rsp         ; rbp = stack pointer ปัจจุบัน
+    sub rsp, 32          ; จองพื้นที่ local 32 bytes
     
-    ; function body...
+    ; เนื้อหาฟังก์ชัน...
     
-    leave                ; equivalent to: mov rsp,rbp; pop rbp
-    ret                  ; return to caller
+    leave                ; เท่ากับ: mov rsp,rbp; pop rbp
+    ret                  ; return ไปหา caller
 ```
 
-**Stack Alignment Rule:**
+**กฏ Stack Alignment:**
 - Stack ต้อง aligned to 16 bytes ก่อน `call`
-- `push rbp` = -8 bytes → misaligned
-- `sub rsp, X` where X % 16 == 8 → aligned
+- `push rbp` = -8 bytes → ไม่ aligned
+- `sub rsp, X` โดยที่ X % 16 == 8 → aligned แล้ว
 
 ```asm
 push rbp             ; rsp -= 8 (now misaligned)
@@ -197,14 +197,14 @@ sub rsp, 32          ; rsp -= 32 (8+32=40, but relative difference is 32)
                      ; Now aligned for call
 ```
 
-### NASM-Specific Syntax
+### Syntax เฉพาะของ NASM
 
-#### 1. Position Independent Code
+#### 1. Position Independent Code (โค้ดที่ไม่ขึ้นกับตำแหน่ง)
 ```asm
-; BAD - absolute addressing (แพ้ relocation)
+; วิธีที่ไม่ดี - absolute addressing (แพ้ relocation)
 mov rax, [msg]
 
-; GOOD - RIP-relative addressing
+; วิธีที่ดี - RIP-relative addressing
 mov rax, [rel msg]
 lea rdi, [rel format]
 ```
@@ -261,23 +261,23 @@ section .text
 
 ### Syscalls (Linux x86-64)
 
-**Method:**
+**วิธีการ:**
 ```asm
 mov rax, syscall_number
 mov rdi, arg1
 mov rsi, arg2
 mov rdx, arg3
-mov r10, arg4           ; note: r10, not rcx
+mov r10, arg4           ; หมายเหตุ: r10 ไม่ใช่ rcx
 mov r8,  arg5
 mov r9,  arg6
-syscall                 ; invoke kernel
-; Return value in rax
+syscall                 ; เรียก kernel
+; ค่าที่ return อยู่ใน rax
 ```
 
-**Common Syscalls:**
+**Syscalls ที่ใช้บ่อย:**
 ```
 ┌────────┬──────────┬─────────────────────┐
-│ Number │ Name     │ Arguments           │
+│ หมายเลข │ ชื่อ     │ Arguments           │
 ├────────┼──────────┼─────────────────────┤
 │   0    │ read     │ fd, buf, count      │
 │   1    │ write    │ fd, buf, count      │
@@ -297,15 +297,15 @@ syscall
 ; rax = file descriptor (หรือ -1 ถ้าเกิด error)
 ```
 
-### Memory Addressing Modes
+### รูปแบบการ Addressing หน่วยความจำ
 
 ```asm
-mov rax, 42              ; immediate
-mov rax, rbx             ; register direct
-mov rax, [rbx]           ; register indirect
+mov rax, 42              ; immediate (ค่าตายตัว)
+mov rax, rbx             ; register direct (ตรงจากรีจิสเตอร์)
+mov rax, [rbx]           ; register indirect (ผ่าน pointer)
 mov rax, [rbx + 8]       ; base + displacement
 mov rax, [rbx + rcx*4]   ; base + index*scale
-mov rax, [rbx + rcx*4 + 8] ; base + index*scale + disp
+mov rax, [rbx + rcx*4 + 8] ; base + index*scale + displacement
 ```
 
 **Scale:** 1, 2, 4, หรือ 8 (ใช้กับ array indexing)
@@ -318,19 +318,19 @@ mov ecx, 5
 mov dword [rbx + rcx*4], 100   ; 4 = sizeof(int)
 ```
 
-### Comments
+### คอมเมนต์ (Comments)
 ```asm
-; Single line comment (ด้วย semicolon)
+; คอมเมนต์บรรทัดเดียว (ด้วย semicolon)
 
-mov rax, 42    ; inline comment
+mov rax, 42    ; คอมเมนต์แบบ inline
 ```
 
 ---
 
-## 1. Colleen.s - Basic Quine
+## 1. Colleen.s - Quine พื้นฐาน
 
 ### หลักการทำงาน
-โปรแกรมที่พิมพ์โค้ดของตัวเองออกมาทาง stdout
+โปรแกรมที่พิมพ์โค้ดของตัวเองออกมาทาง stdout (output มาตรฐาน)
 
 ### โครงสร้างโค้ด
 
@@ -355,7 +355,7 @@ call printf        ; printf(fmt, 34, fmt, 34)
 
 ผลลัพธ์: `"...format string..."`
 
-### Compile & Run
+### การ Compile และรัน
 ```bash
 nasm -f elf64 Colleen.s -o obj/Colleen.o
 gcc -no-pie obj/Colleen.o -o exc/Colleen
@@ -365,7 +365,7 @@ diff Colleen.s tmp  # ควรไม่มีความแตกต่าง
 
 ---
 
-## 2. Grace.s - File Creator Quine
+## 2. Grace.s - Quine ที่สร้างไฟล์
 
 ### หลักการทำงาน
 สร้างไฟล์ `Grace_kid.s` ที่เหมือนกับตัวเองทุกอย่าง โดยไม่อ่านไฟล์ต้นฉบับ
@@ -404,7 +404,7 @@ mov rdx, 0644q     ; permissions: rw-r--r--
 syscall
 ```
 
-### Compile & Run
+### การ Compile และรัน
 ```bash
 nasm -f elf64 Grace.s -o obj/Grace.o
 gcc -no-pie obj/Grace.o -o exc/Grace
@@ -414,7 +414,7 @@ diff Grace.s Grace_kid.s  # ควรไม่มีความแตกต่�
 
 ---
 
-## 3. Sully.s - Self-Decrementing Quine
+## 3. Sully.s - Quine ที่ลดค่าตัวเอง
 
 ### หลักการทำงาน
 - เริ่มด้วย `i = 5` (comment บรรทัดแรก)
@@ -485,7 +485,7 @@ mov rbp, rsp
 sub rsp, 32        ; จอง space (ต้องเป็นเลขคู่ * 8)
 ```
 
-### Compile & Run
+### การ Compile และรัน
 ```bash
 # ในโฟลเดอร์ test/
 nasm -f elf64 ../Sully.s -o Sully.o
@@ -498,22 +498,22 @@ gcc -no-pie Sully.o -o Sully
 # Sully_3.s, Sully_3.o, Sully_3
 # Sully_2.s, Sully_2.o, Sully_2
 # Sully_1.s, Sully_1.o, Sully_1
-# Sully_0.s (ไม่มี .o และ executable)
+# Sully_0.s (ไม่มี .o และไฟล์ executable)
 ```
 
 ---
 
 ## เทคนิคสำคัญที่ใช้ทั่วทั้ง 3 โปรแกรม
 
-### 1. Quine Technique
+### 1. เทคนิค Quine
 ```c
 char *s = "format string with %s";
 printf(s, s);  // พิมพ์ format string แล้วแทนค่า %s ด้วยตัวมันเอง
 ```
 
-### 2. Escaping Special Characters
-- ใช้ `%c` กับ ASCII 34 สำหรับ `"`
-- NASM: `%%` → `%` (escape percent)
+### 2. การ Escape อักขระพิเศษ
+- ใช้ `%c` กับ ASCII 34 สำหรับเครื่องหมาย `"`
+- NASM: `%%` → `%` (escape เครื่องหมาย percent)
 - Format: `%1$c` = positional argument แรก
 
 ### 3. System V x86-64 Calling Convention
@@ -549,9 +549,9 @@ mov rax, [rel i]       ; อ่านค่า i
 
 ---
 
-## การ Debug
+## การ Debug (แก้ไขข้อผิดพลาด)
 
-### ดู Register Values
+### ดูค่าใน Register
 ```bash
 gdb ./exc/Colleen
 (gdb) break main
@@ -566,10 +566,10 @@ strace ./exc/Grace
 # จะเห็น open, write, close calls
 ```
 
-### ดู Stack Alignment
+### ตรวจสอบ Stack Alignment
 ```bash
 (gdb) p $rsp
-# ควร end ด้วย 0 (multiple of 16)
+# ควรลงท้ายด้วย 0 (ตัวเลขที่หารด้วย 16 ลงตัว)
 ```
 
 ---
@@ -584,29 +584,32 @@ strace ./exc/Grace
 
 ---
 
-## Testing
+## การทดสอบ (Testing)
 
 ```bash
-# Build all
+# Build ทั้งหมด
 make
 
-# Test individually
+# Test script อัตโนมัติ
+./test.sh
+
+# Test แต่ละตัวเอง
 ./exc/Colleen > tmp && diff Colleen.s tmp
 ./exc/Grace && diff Grace.s Grace_kid.s
 
-# Test Sully in subdirectory
+# Test Sully ในโฟลเดอร์ย่อย
 mkdir test && cd test
 nasm -f elf64 ../Sully.s -o Sully.o
 gcc -no-pie Sully.o -o Sully
 ./Sully
-ls -al | grep Sully | wc -l  # Should be 15
+ls -al | grep Sully | wc -l  # ควรได้ 15 ไฟล์
 ```
 
 ---
 
-## References
+## เอกสารอ้างอิง
 
-- [NASM Manual](https://www.nasm.us/doc/)
+- [คู่มือ NASM](https://www.nasm.us/doc/)
 - [System V ABI](https://wiki.osdev.org/System_V_ABI)
-- [Linux Syscalls x86-64](https://filippo.io/linux-syscall-table/)
-- [Quine (computing)](https://en.wikipedia.org/wiki/Quine_(computing))
+- [ตาราง Linux Syscalls x86-64](https://filippo.io/linux-syscall-table/)
+- [Quine (computing) - Wikipedia](https://en.wikipedia.org/wiki/Quine_(computing))
