@@ -6,6 +6,327 @@ Dr_Quine คือโปรเจคที่สร้างโปรแกร�
 
 ---
 
+## พื้นฐาน Assembly (NASM x86-64)
+
+### โครงสร้างไฟล์ Assembly
+
+ไฟล์ Assembly แบ่งออกเป็น **sections** หลัก 3 ส่วน:
+
+```asm
+section .data      ; เก็บข้อมูลที่มีค่าเริ่มต้น (read-write)
+    msg db "Hello", 0
+    num dq 42
+
+section .bss       ; เก็บข้อมูลที่ยังไม่มีค่า (reserved space)
+    buffer resb 256
+
+section .text      ; เก็บโค้ดคำสั่ง (instructions)
+    global main
+    extern printf
+main:
+    ; code here
+```
+
+**ประเภทข้อมูล:**
+- `db` - define byte (1 byte)
+- `dw` - define word (2 bytes)
+- `dd` - define double word (4 bytes)
+- `dq` - define quad word (8 bytes)
+- `resb` - reserve bytes (ใน .bss)
+
+### Registers (x86-64)
+
+**General Purpose Registers (64-bit):**
+
+```
+┌─────────┬──────────────────────────────────┐
+│ 64-bit  │ Purpose                          │
+├─────────┼──────────────────────────────────┤
+│ rax     │ Accumulator, return value        │
+│ rbx     │ Base register                    │
+│ rcx     │ Counter, 4th argument            │
+│ rdx     │ Data register, 3rd argument      │
+│ rsi     │ Source index, 2nd argument       │
+│ rdi     │ Destination index, 1st argument  │
+│ rbp     │ Base pointer (stack frame)       │
+│ rsp     │ Stack pointer                    │
+│ r8-r15  │ Additional general purpose       │
+└─────────┴──────────────────────────────────┘
+```
+
+**Accessing Different Sizes:**
+```
+┌──────┬──────┬──────┬──────┐
+│  64  │  32  │  16  │   8  │
+├──────┼──────┼──────┼──────┤
+│ rax  │ eax  │  ax  │  al  │  (ah = high 8)
+│ rbx  │ ebx  │  bx  │  bl  │
+│ rcx  │ ecx  │  cx  │  cl  │
+│ rdx  │ edx  │  dx  │  dl  │
+│ rsi  │ esi  │  si  │ sil  │
+│ rdi  │ edi  │  di  │ dil  │
+└──────┴──────┴──────┴──────┘
+```
+
+**Special Registers:**
+- `rip` - Instruction pointer (program counter)
+- `rflags` - Flags register (carry, zero, sign, etc.)
+
+### Instructions พื้นฐาน
+
+#### 1. Data Movement
+```asm
+mov rax, 42          ; rax = 42 (immediate value)
+mov rax, rbx         ; rax = rbx (register to register)
+mov rax, [rbx]       ; rax = *rbx (load from memory)
+mov [rbx], rax       ; *rbx = rax (store to memory)
+
+lea rax, [rel msg]   ; rax = address of msg (load effective address)
+```
+
+**ความแตกต่าง `mov` vs `lea`:**
+```asm
+msg db "Hello", 0
+mov rax, [rel msg]   ; rax = ค่าที่อยู่ใน msg (ชี้ไป)
+lea rax, [rel msg]   ; rax = address ของ msg
+```
+
+#### 2. Arithmetic
+```asm
+add rax, 5           ; rax += 5
+sub rax, 3           ; rax -= 3
+inc rax              ; rax++
+dec rax              ; rax--
+imul rax, rbx        ; rax *= rbx (signed)
+idiv rbx             ; rax = rdx:rax / rbx, rdx = remainder
+```
+
+#### 3. Logical Operations
+```asm
+and rax, rbx         ; rax &= rbx
+or  rax, rbx         ; rax |= rbx
+xor rax, rax         ; rax ^= rax (zeroing trick: rax = 0)
+not rax              ; rax = ~rax
+```
+
+#### 4. Comparison & Jumps
+```asm
+cmp rax, rbx         ; compare rax with rbx (sets flags)
+test rax, rax        ; test if rax is zero
+
+; Conditional jumps (based on flags)
+je  .label           ; jump if equal (ZF=1)
+jne .label           ; jump if not equal (ZF=0)
+jl  .label           ; jump if less (SF≠OF)
+jle .label           ; jump if less or equal
+jg  .label           ; jump if greater
+jge .label           ; jump if greater or equal
+
+; Unconditional jump
+jmp .label           ; always jump
+```
+
+**ตัวอย่าง:**
+```asm
+mov rax, 5
+cmp rax, 10
+jl  .less_than       ; ถ้า rax < 10, jump to .less_than
+; code if rax >= 10
+jmp .done
+.less_than:
+; code if rax < 10
+.done:
+```
+
+#### 5. Stack Operations
+```asm
+push rax             ; rsp -= 8; [rsp] = rax
+pop  rax             ; rax = [rsp]; rsp += 8
+```
+
+**Stack grows downward:**
+```
+High Address
+    ↑
+    │  push → rsp ลดลง
+    │  pop  → rsp เพิ่มขึ้น
+    ↓
+Low Address
+```
+
+### Function Calls (System V ABI)
+
+**Calling Convention:**
+
+```asm
+; Arguments (in order):
+; rdi, rsi, rdx, rcx, r8, r9, [stack]
+
+; Example: printf(format, arg1, arg2, arg3)
+lea rdi, [rel format]    ; 1st arg: format string
+mov rsi, 10              ; 2nd arg: value 10
+mov rdx, 34              ; 3rd arg: value 34
+lea rcx, [rel mystr]     ; 4th arg: pointer
+xor rax, rax             ; rax = 0 (no vector registers)
+call printf              ; call function
+```
+
+**Function Prologue/Epilogue:**
+
+```asm
+main:
+    push rbp             ; save old base pointer
+    mov rbp, rsp         ; rbp = current stack pointer
+    sub rsp, 32          ; allocate 32 bytes local space
+    
+    ; function body...
+    
+    leave                ; equivalent to: mov rsp,rbp; pop rbp
+    ret                  ; return to caller
+```
+
+**Stack Alignment Rule:**
+- Stack ต้อง aligned to 16 bytes ก่อน `call`
+- `push rbp` = -8 bytes → misaligned
+- `sub rsp, X` where X % 16 == 8 → aligned
+
+```asm
+push rbp             ; rsp -= 8 (now misaligned)
+mov rbp, rsp
+sub rsp, 32          ; rsp -= 32 (8+32=40, but relative difference is 32)
+                     ; Now aligned for call
+```
+
+### NASM-Specific Syntax
+
+#### 1. Position Independent Code
+```asm
+; BAD - absolute addressing (แพ้ relocation)
+mov rax, [msg]
+
+; GOOD - RIP-relative addressing
+mov rax, [rel msg]
+lea rdi, [rel format]
+```
+
+#### 2. Macros (%define)
+```asm
+%define NEWLINE 10
+%define QUOTE 34
+
+section .data
+    msg db "Hello", NEWLINE, 0
+
+section .text
+    mov rsi, QUOTE       ; mov rsi, 34
+```
+
+**Macro with String:**
+```asm
+%define CODE "section .text%cmain:%c    ret%c"
+
+; ใช้ในโค้ด:
+lea rsi, [rel format]
+; format db CODE, 0
+
+; %c จะถูก replace ด้วย argument ที่ส่งไปใน printf
+```
+
+#### 3. Positional Arguments (printf-style)
+```asm
+; ใน format string:
+; %1$c = argument ตัวที่ 1 เป็น char
+; %2$s = argument ตัวที่ 2 เป็น string
+; %3$d = argument ตัวที่ 3 เป็น int
+
+section .data
+    fmt db "Value: %1$d, Char: %2$c, String: %3$s", 0
+
+section .text
+    lea rdi, [rel fmt]
+    mov rsi, 42          ; %1$d
+    mov rdx, 65          ; %2$c = 'A'
+    lea rcx, [rel str]   ; %3$s
+    call printf
+```
+
+**การ Escape % ใน NASM:**
+- `%` → ใช้ใน directive (`%define`)
+- `%%` → กลายเป็น `%` ในโค้ด final
+
+```asm
+%define SELF "%%define SELF"
+; จะได้: "%define SELF" ในไฟล์
+```
+
+### Syscalls (Linux x86-64)
+
+**Method:**
+```asm
+mov rax, syscall_number
+mov rdi, arg1
+mov rsi, arg2
+mov rdx, arg3
+mov r10, arg4           ; note: r10, not rcx
+mov r8,  arg5
+mov r9,  arg6
+syscall                 ; invoke kernel
+; Return value in rax
+```
+
+**Common Syscalls:**
+```
+┌────────┬──────────┬─────────────────────┐
+│ Number │ Name     │ Arguments           │
+├────────┼──────────┼─────────────────────┤
+│   0    │ read     │ fd, buf, count      │
+│   1    │ write    │ fd, buf, count      │
+│   2    │ open     │ filename, flags, m  │
+│   3    │ close    │ fd                  │
+│  60    │ exit     │ status              │
+└────────┴──────────┴─────────────────────┘
+```
+
+**ตัวอย่าง open:**
+```asm
+mov rax, 2               ; syscall: open
+lea rdi, [rel filename]  ; const char *filename
+mov rsi, 0x241           ; flags: O_WRONLY|O_CREAT|O_TRUNC
+mov rdx, 0644o           ; mode: rw-r--r-- (octal)
+syscall
+; rax = file descriptor (หรือ -1 ถ้าเกิด error)
+```
+
+### Memory Addressing Modes
+
+```asm
+mov rax, 42              ; immediate
+mov rax, rbx             ; register direct
+mov rax, [rbx]           ; register indirect
+mov rax, [rbx + 8]       ; base + displacement
+mov rax, [rbx + rcx*4]   ; base + index*scale
+mov rax, [rbx + rcx*4 + 8] ; base + index*scale + disp
+```
+
+**Scale:** 1, 2, 4, หรือ 8 (ใช้กับ array indexing)
+
+```asm
+; int array[10];
+; array[5] = 100;
+lea rbx, [rel array]
+mov ecx, 5
+mov dword [rbx + rcx*4], 100   ; 4 = sizeof(int)
+```
+
+### Comments
+```asm
+; Single line comment (ด้วย semicolon)
+
+mov rax, 42    ; inline comment
+```
+
+---
+
 ## 1. Colleen.s - Basic Quine
 
 ### หลักการทำงาน
