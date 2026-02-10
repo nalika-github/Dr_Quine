@@ -7,15 +7,15 @@ section .text
     global main
     extern printf
 main:
-    push rbp
-    mov rbp, rsp
-    lea rdi, [rel fmt]
-    mov rsi, 10
-    mov rdx, 34
-    lea rcx, [rel fmt]
-    mov r8, 34
-    xor rax, rax
-    call printf
-    xor rax, rax
-    leave
-    ret
+    push rbp            ; set up base pointer
+    mov rbp, rsp        ; set up base pointer
+    lea rdi, [rel fmt]  ; prepare format string
+    mov rsi, 10         ; prepare newline character
+    mov rdx, 34         ; prepare double quote character
+    lea rcx, [rel fmt]  ; prepare fmt for printf
+    mov r8, 34          ; prepare double quote character
+    xor rax, rax        ; clear rax for variadic function
+    call printf         ; call printf(fmt, 10, 34, fmt, 34);
+    xor rax, rax        ; clear rax for return
+    leave               ; restore base pointer
+    ret                 ; return from main

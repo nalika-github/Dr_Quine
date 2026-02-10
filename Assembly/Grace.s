@@ -13,24 +13,24 @@ GLOBAL_MAIN
 
 %macro GRACE 0
 MAIN
-push rbp
-mov rbp, rsp
-lea rdi, [rel kidsname]
-mov rsi, 0x241
-mov rdx, 0644q
-mov rax, 2
-syscall
-cmp rax, 0
-jb .ret
+push rbp                ; set up base pointer
+mov rbp, rsp            ; set up base pointer
+lea rdi, [rel kidsname] ; prepare filename for syscall
+mov rsi, 0x241          ; prepare flags for syscall
+mov rdx, 0644q          ; prepare mode for syscall
+mov rax, 2              ; syscall: sys_open
+syscall                 ; invoke syscall
+cmp rax, 0              ; check if syscall returned an error
+jb .ret                 ; if error, jump to return
 
-mov rdi, rax
-lea rsi, [rel self]
-mov rdx, 10
-mov rcx, 34
-lea r8, [rel self]
-call dprintf
-.ret:
-leave
-ret
+mov rdi, rax            ; file descriptor
+lea rsi, [rel self]     ; prepare buffer for dprintf
+mov rdx, 10             ; prepare newline character
+mov rcx, 34             ; prepare double quote character
+lea r8, [rel self]      ; prepare self for dprintf
+call dprintf            ; call dprintf to write to file
+.ret:                   ; return label
+leave                   ; restore base pointer
+ret                     ; return from main
 %endmacro
-GRACE
+GRACE                   ; run the GRACE macro

@@ -13,53 +13,53 @@ section .text
     global main
     extern sprintf, fopen, fprintf, fclose, system
 main:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 32
-    mov rax, [rel i]
-    mov [rbp-8], rax
-    cmp rax, 0
-    jle .exit
-    dec rax
-    mov [rbp-16], rax
-    lea rdi, [rel filename]
-    lea rsi, [rel filename_fmt]
-    mov rdx, rax
-    xor rax, rax
-    call sprintf
-    lea rdi, [rel filename]
-    lea rsi, [rel mode]
-    call fopen
-    cmp rax, 0
-    je .exit
-    mov [rbp-24], rax
-    mov rdi, rax
-    lea rsi, [rel code_fmt]
-    mov rax, [rbp-16]
-    mov rdx, rax
-    mov rcx, 10
-    mov r8, 34
-    lea r9, [rel code_fmt]
-    mov qword [rsp], 34
-    xor rax, rax
-    call fprintf
-    mov rdi, [rbp-24]
-    call fclose
-    mov rax, [rbp-16]
-    cmp rax, 0
-    jle .exit
-    lea rdi, [rel cmd]
-    lea rsi, [rel compile_fmt]
-    mov rdx, rax
-    mov rcx, rax
-    mov r8, rax
-    mov r9, rax
-    mov [rsp], rax
-    xor rax, rax
-    call sprintf
-    lea rdi, [rel cmd]
-    call system
+    push rbp                    ; set up base pointer
+    mov rbp, rsp                ; set up base pointer
+    sub rsp, 32                 ; allocate space on stack
+    mov rax, [rel i]            ; load i
+    mov [rbp-8], rax            ; store i at rbp-8
+    cmp rax, 0                  ; if i <= 0
+    jle .exit                   ; return 0;
+    dec rax                     ; i - 1
+    mov [rbp-16], rax           ; store i - 1 at rbp-16
+    lea rdi, [rel filename]         ; prepare filename for sprintf
+    lea rsi, [rel filename_fmt]     ; prepare format string
+    mov rdx, rax                    ; prepare i-1
+    xor rax, rax                    ; clear rax for variadic function
+    call sprintf                    ; sprintf(filename, filename_fmt, i - 1);
+    lea rdi, [rel filename]         ; prepare filename for fopen
+    lea rsi, [rel mode]             ; prepare mode for fopen
+    call fopen                      ; open file
+    cmp rax, 0                      ; if file pointer is NULL
+    je .exit                        ; return 0;
+    mov [rbp-24], rax               ; store file pointer
+    mov rdi, rax                    ; prepare file pointer for fprintf
+    lea rsi, [rel code_fmt]         ; prepare format string for fprintf
+    mov rax, [rbp-16]               ; load i - 1
+    mov rdx, rax                    ; prepare i - 1 for fprintf
+    mov rcx, 10                     ; prepare newline character
+    mov r8, 34                      ; prepare double quote character
+    lea r9, [rel code_fmt]          ; prepare code_fmt for fprintf
+    mov qword [rsp], 34             ; prepare double quote character on stack
+    xor rax, rax                    ; clear rax for variadic function
+    call fprintf                    ; fprintf(file, code_fmt, i - 1, 10, 34, code_fmt, 34);
+    mov rdi, [rbp-24]               ; prepare file pointer for fclose
+    call fclose                     ; fclose(file);
+    mov rax, [rbp-16]               ; load i - 1
+    cmp rax, 0                      ; if i - 1 <= 0
+    jle .exit                       ; return 0;
+    lea rdi, [rel cmd]              ; prepare cmd for sprintf
+    lea rsi, [rel compile_fmt]      ; prepare format string for sprintf
+    mov rdx, rax                    ; prepare i - 1 for sprintf
+    mov rcx, rax                    ; prepare i - 1 for sprintf
+    mov r8, rax                     ; prepare i - 1 for sprintf
+    mov r9, rax                     ; prepare i - 1 for sprintf
+    mov [rsp], rax                  ; prepare i - 1 on stack
+    xor rax, rax                    ; clear rax for variadic function
+    call sprintf                    ; sprintf(cmd, compile_fmt, i - 1, i - 1, i - 1, i - 1, i - 1);
+    lea rdi, [rel cmd]              ; prepare cmd for system
+    call system                     ; system(cmd);
 .exit:
-    xor rax, rax
-    leave
-    ret
+    xor rax, rax                    ; return 0
+    leave                           ; restore base pointer
+    ret                             ; return from main
